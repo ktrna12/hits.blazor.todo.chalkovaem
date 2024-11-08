@@ -25,6 +25,18 @@
             <InputDate @bind-Value="TaskItem.FinishedDate" class="form-control" />
             <ValidationMessage For="() => TaskItem.FinishedDate" />
         </div>
+        <div class="form-group d-flex justify-content-between m-2">
+            <label class="col-form-label col-3">Исполнитель</label>
+            <InputSelect @bind-Value="TaskItem.AssigneeId" class="form-control">
+                <option value="">Выберите исполнителя</option>
+                @foreach (var user in users)
+                {
+                    <option value="@user.Id">@user.FullName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => TaskItem.AssigneeId" />
+        </div>
+
         <div class="btn-group">
             <button class="btn btn-primary m-2" type="submit">Сохранить</button>
             <a class="btn btn-primary m-2" href="/">Отмена</a>
@@ -35,6 +47,7 @@
 @code {
     [Parameter]
     public int Id { get; set; }
+    IEnumerable<UserItem> users = new List<UserItem>();
 
     [SupplyParameterFromForm]
     TaskItem? TaskItem { get; set; }
@@ -42,16 +55,23 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        users = await data.GetAllUsersAsync();
+
         if (TaskItem == null)
         {
             TaskItem = new();
             if (Id != 0)
             {
-                var scr = await data.GetTaskAsync(Id);
-                TaskItem.Id = scr.Id;
-                TaskItem.Title = scr.Title;
-                TaskItem.Description = scr.Description;
-                TaskItem.FinishedDate = scr.FinishedDate;
+                var task = await data.GetTaskAsync(Id);
+                if (task != null)
+                {
+                    TaskItem.Id = task.Id;
+                    TaskItem.Title = task.Title;
+                    TaskItem.Description = task.Description;
+                    TaskItem.FinishedDate = task.FinishedDate;
+                    TaskItem.AssigneeId = task.AssigneeId; 
+                }
             }
         }
     }
